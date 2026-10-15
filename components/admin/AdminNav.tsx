@@ -8,6 +8,7 @@ const ITEMS = [
   { href: '/admin/stop-list', label: 'Стоп-лист' },
   { href: '/admin/lunch', label: 'Бизнес-ланч' },
   { href: '/admin/events', label: 'Афиша' },
+  { href: '/admin/users', label: 'Доступы' },
 ]
 
 /** Навигация админки с подсветкой текущего раздела. */

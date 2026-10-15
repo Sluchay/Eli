@@ -81,6 +81,10 @@ const sections = [
   { path: '/admin/lunch', must: ['Бизнес-ланч', 'Когда подаём'] },
   { path: '/admin/events', must: ['Афиша', 'События с датой', 'Анонсы без даты'] },
   { path: '/admin/items/new', must: ['Новое блюдо', 'Так увидит гость'] },
+  {
+    path: '/admin/users',
+    must: ['Доступы в админку', 'Сменить свой пароль', 'Добавить пользователя', 'Редактор'],
+  },
 ]
 
 for (const section of sections) {
