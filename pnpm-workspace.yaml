@@ -1,0 +1,16 @@
+# Настройки pnpm для этого проекта.
+#
+# allowBuilds — какие зависимости имеют право запускать скрипты установки.
+# Prisma и esbuild без них не работают: первый скачивает движки и генерирует
+# клиент, второй собирает бинарник. Разрешаем только их, всё остальное
+# по-прежнему не может выполнять произвольный код при установке.
+allowBuilds:
+  '@prisma/client': true
+  '@prisma/engines': true
+  esbuild: true
+  prisma: true
+
+minimumReleaseAgeExclude:
+  - '@next/swc-linux-arm64-gnu@16.4.1'
+  - '@next/swc-win32-arm64-msvc@16.4.1'
+  - next@16.4.1

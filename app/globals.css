@@ -1,0 +1,195 @@
+@import 'tailwindcss';
+
+/* ───────────────────────────────────────────────────────────────────────────
+   Дизайн-токены бренда «ЕЛИ»
+   Палитра снята с афиши ресторана: крафтовая бумага, глубокий хвойный,
+   чёрная типографская краска, латунный акцент.
+   ─────────────────────────────────────────────────────────────────────────── */
+@theme {
+  --color-forest-900: #16281f;
+  --color-forest-800: #1b3025;
+  --color-forest-700: #1f3a2c;
+  --color-forest-500: #33553f;
+  --color-moss-400: #5e7a55;
+  --color-moss-300: #8aa580;
+
+  --color-kraft-100: #f4ebd9;
+  --color-kraft-200: #e9dcc2;
+  --color-kraft-300: #d9c7a4;
+  --color-kraft-400: #c4ad83;
+
+  --color-ink: #14130f;
+  --color-ink-soft: #4a463c;
+
+  --color-brass: #a9884f;
+  --color-brass-light: #c8a86a;
+
+  --color-berry: #7a2e27;
+  --color-ok: #3e6b4f;
+
+  /* Значения --font-*-family подставляет next/font в app/layout.tsx */
+  --font-heading: var(--font-heading-family), 'Old Standard TT', Georgia, 'Times New Roman', serif;
+  --font-body: var(--font-body-family), 'Golos Text', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --radius-brand: 3px;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+
+  body {
+    background-color: var(--color-kraft-100);
+    /* Слабое зерно крафтовой бумаги. Вектор, а не картинка: весит байты. */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    font-size: 1rem;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-heading);
+    font-weight: 400;
+    line-height: 1.15;
+    letter-spacing: 0.005em;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  ::selection {
+    background: var(--color-brass);
+    color: #fff;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-brass);
+    outline-offset: 3px;
+  }
+
+  /* Якоря не прячутся под липкой шапкой */
+  [id] {
+    scroll-margin-top: 5.5rem;
+  }
+
+  img,
+  svg {
+    max-width: 100%;
+  }
+}
+
+@layer components {
+  .container-page {
+    margin-inline: auto;
+    width: 100%;
+    max-width: 1180px;
+    padding-inline: 1.25rem;
+  }
+
+  @media (min-width: 640px) {
+    .container-page {
+      padding-inline: 2rem;
+    }
+  }
+
+  /* Тонкая латунная линейка — повторяет линейки на афише */
+  .rule-brass {
+    height: 1px;
+    background: linear-gradient(
+      to right,
+      transparent,
+      var(--color-kraft-400) 12%,
+      var(--color-kraft-400) 88%,
+      transparent
+    );
+  }
+
+  .rule-brass-strong {
+    height: 2px;
+    background: linear-gradient(
+      to right,
+      transparent,
+      var(--color-brass) 15%,
+      var(--color-brass) 85%,
+      transparent
+    );
+  }
+
+  /* Надзаголовок секции */
+  .eyebrow {
+    font-family: var(--font-body);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--color-brass);
+  }
+
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Цену никогда не сбиваем с толку переносом */
+  .price {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  /* Зерно бумаги поверх светлых блоков */
+  .grain::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+    opacity: 0.9;
+    mix-blend-mode: multiply;
+  }
+
+  /* То же зерно, но на тёмном фоне — работает как освещение, а не как грязь */
+  .grain-dark::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+    opacity: 0.09;
+    mix-blend-mode: overlay;
+  }
+
+  /* Горизонтальная лента без видимого скроллбара */
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

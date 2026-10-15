@@ -1,0 +1,35 @@
+# зависимости
+node_modules/
+.pnpm-store/
+
+# сборка
+.next/
+out/
+build/
+dist/
+
+# окружение
+.env
+.env.local
+.env*.local
+
+# данные приложения (SQLite и загруженные изображения)
+data/
+
+# логи и кэш
+*.log
+npm-debug.log*
+pnpm-debug.log*
+.eslintcache
+*.tsbuildinfo
+
+# система
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# редакторы
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/

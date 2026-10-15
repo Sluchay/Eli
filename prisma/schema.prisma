@@ -1,0 +1,205 @@
+// Схема данных сайта «ЕЛИ».
+//
+// Важные решения, которые нужно знать перед правками:
+//
+// 1. SQLite не поддерживает enum и скалярные списки (String[]). Поэтому
+//    перечисления — это String с комментарием-допустимыми значениями, а списки
+//    (метки, аллергены, соцсети) хранятся как JSON-строка. Это осознанный выбор:
+//    переход на PostgreSQL не потребует переписывать таблицы — достаточно
+//    поменять provider и, при желании, превратить эти поля в enum/массивы.
+// 2. Цены хранятся в КОПЕЙКАХ (целое число). 690 ₽ = 69000. Никаких Float:
+//    дробные числа в деньгах рано или поздно дают ошибку в чеке.
+// 3. Порядок элементов — поле sortOrder с шагом 10, чтобы вставлять между ними.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+/// Пользователь админки. role: "ADMIN" | "EDITOR"
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String   @default("")
+  role         String   @default("EDITOR")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+/// Настройки сайта. Одна запись с id = 1 (singleton).
+model SiteSettings {
+  id              Int      @id @default(1)
+  name            String   @default("ЕЛИ")
+  tagline         String?
+  aboutShort      String?
+  aboutLong       String?
+  addressFull     String?
+  city            String?
+  mapLat          Float?
+  mapLng          Float?
+  routeUrl        String?
+  phoneDisplay    String?
+  phoneHref       String?
+  email           String?
+  /// JSON-массив: [{"label":"Telegram","href":"https://t.me/..."}]
+  socials         String   @default("[]")
+  legalInfo       String?
+  currency        String   @default("₽")
+  bookingEnabled  Boolean  @default(true)
+  deliveryEnabled Boolean  @default(false)
+  updatedAt       DateTime @updatedAt
+}
+
+/// Часы работы по дням. weekday: 0 = понедельник ... 6 = воскресенье.
+/// opensAt = null означает выходной.
+model OpeningHours {
+  id        String  @id @default(cuid())
+  weekday   Int     @unique
+  label     String
+  opensAt   String?
+  closesAt  String?
+  note      String?
+  sortOrder Int     @default(0)
+}
+
+/// Раздел меню. iconKey выбирает гравюрную иконку для блюд без фото.
+model MenuSection {
+  id            String     @id @default(cuid())
+  slug          String     @unique
+  title         String
+  description   String?
+  iconKey       String?
+  sortOrder     Int        @default(0)
+  isVisible     Boolean    @default(true)
+  /// Время доступности раздела (например, бизнес-ланч 12:00–16:00)
+  availableFrom String?
+  availableTo   String?
+  items         MenuItem[]
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}
+
+/// Блюдо. Все поля кроме названия и раздела — необязательные:
+/// у владельца может не быть ни фото, ни КБЖУ, и вёрстка обязана это выдержать.
+model MenuItem {
+  id          String      @id @default(cuid())
+  sectionId   String
+  section     MenuSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  /// Цена в копейках. null = «цена по запросу»
+  price       Int?
+  priceNote   String?
+  weight      String?
+  volume      String?
+  composition String?
+  /// JSON-массив кодов аллергенов: ["gluten","milk"]
+  allergens   String      @default("[]")
+  calories    Int?
+  protein     Float?
+  fat         Float?
+  carbs       Float?
+  /// JSON-массив меток: ["hit","new","vegan","spicy","glutenfree","local"]
+  badges      String      @default("[]")
+  isVisible   Boolean     @default(true)
+  /// Стоп-лист: блюдо показывается приглушённо, но не исчезает
+  isStopList  Boolean     @default(false)
+  sortOrder   Int         @default(0)
+  images      MenuItemImage[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([sectionId, sortOrder])
+}
+
+/// Изображение блюда. Пути — относительно UPLOAD_DIR.
+model MenuItemImage {
+  id        String   @id @default(cuid())
+  itemId    String
+  item      MenuItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  path      String
+  width     Int
+  height    Int
+  /// Размытое превью для плавной загрузки
+  placeholder String?
+  alt       String?
+  isPrimary Boolean  @default(false)
+  sortOrder Int      @default(0)
+
+  @@index([itemId, sortOrder])
+}
+
+/// Стол в зале. qrToken — случайная строка: номер стола нельзя перебрать.
+model Table {
+  id       String  @id @default(cuid())
+  number   Int     @unique
+  label    String?
+  qrToken  String  @unique
+  isActive Boolean @default(true)
+}
+
+/// Агрегированная статистика сканов меню. Персональных данных нет.
+model ScanEvent {
+  id         String   @id @default(cuid())
+  tableId    String?
+  path       String
+  deviceType String?
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+/// Мероприятие (афиша): вечера живой музыки, дегустации, праздники.
+model Event {
+  id           String    @id @default(cuid())
+  slug         String    @unique
+  title        String
+  description  String?
+  startsAt     DateTime
+  endsAt       DateTime?
+  price        Int?
+  priceNote    String?
+  imagePath    String?
+  bookingPhone String?
+  isPublished  Boolean   @default(true)
+  isFeatured   Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([startsAt])
+}
+
+/// Заявка на бронь стола. status: "NEW" | "CONFIRMED" | "CANCELLED" | "ARCHIVED"
+model Booking {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String
+  date      DateTime
+  time      String
+  guests    Int
+  comment   String?
+  tableId   String?
+  status    String   @default("NEW")
+  source    String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+/// Журнал изменений: кто и что правил в админке.
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  entity    String
+  entityId  String?
+  payload   String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
