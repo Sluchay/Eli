@@ -6,6 +6,7 @@ import { SITE } from '@/lib/site'
 
 const NAV = [
   { href: '/menu', label: 'Меню' },
+  { href: '/lunch', label: 'Бизнес-ланч' },
   { href: '/events', label: 'Афиша' },
   { href: '/#contacts', label: 'Контакты' },
 ]

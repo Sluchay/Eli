@@ -15,6 +15,7 @@
     "format": "prettier --write .",
     "check:pages": "node scripts/smoke-test.mjs",
     "check:styles": "node scripts/check-styles.mjs",
+    "check:admin": "node scripts/check-admin.mjs",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:seed": "prisma db seed",
@@ -27,7 +28,8 @@
     "@prisma/client": "6.19.3",
     "next": "16.4.1",
     "react": "19.3.1",
-    "react-dom": "19.3.1"
+    "react-dom": "19.3.1",
+    "sharp": "^0.35.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "4.3.3",

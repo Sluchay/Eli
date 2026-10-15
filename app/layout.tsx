@@ -1,7 +1,5 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
-import { SiteFooter } from '@/components/public/SiteFooter'
-import { SiteHeader } from '@/components/public/SiteHeader'
 import { bodyFont, headingFont } from '@/lib/fonts'
 import { SITE } from '@/lib/site'
 
@@ -34,22 +32,16 @@ export const viewport: Viewport = {
   initialScale: 1,
 }
 
+/**
+ * Корневой каркас: только документ и шрифты.
+ *
+ * Шапка и подвал публичной части живут в app/(public)/layout.tsx, а у админки
+ * своя шапка. Так публичный сайт и кабинет не тянут чужую вёрстку друг другу.
+ */
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ru" className={`${headingFont.variable} ${bodyFont.variable}`}>
-      <body className="flex min-h-dvh flex-col">
-        <a
-          href="#content"
-          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-brand focus:bg-forest-700 focus:px-4 focus:py-2 focus:text-kraft-100"
-        >
-          Перейти к содержимому
-        </a>
-        <SiteHeader />
-        <main id="content" className="flex-1">
-          {children}
-        </main>
-        <SiteFooter />
-      </body>
+      <body>{children}</body>
     </html>
   )
 }

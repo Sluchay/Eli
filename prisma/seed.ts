@@ -429,6 +429,7 @@ async function main() {
   await prisma.event.deleteMany()
   await prisma.scanEvent.deleteMany()
   await prisma.table.deleteMany()
+  await prisma.businessLunch.deleteMany()
 
   console.log('Настройки сайта…')
   await prisma.siteSettings.upsert({
@@ -448,6 +449,8 @@ async function main() {
       phoneDisplay: '+7 (926) 524-01-01',
       phoneHref: 'tel:+79265240101',
       email: 'hello@eli-restaurant.ru',
+      lunchNote: 'понедельник – пятница, 12:00–16:00. В праздники не подаём.',
+      lunchEnabled: true,
       socials: JSON.stringify([
         { label: 'Telegram', href: 'https://t.me/' },
         { label: 'ВКонтакте', href: 'https://vk.com/' },
@@ -527,6 +530,47 @@ async function main() {
       isFeatured: true,
     },
   })
+
+  // Второй формат афиши — «пост»: фото и подпись, без даты и заголовка.
+  // Именно так удобнее всего переносить анонсы из соцсетей.
+  await prisma.event.create({
+    data: {
+      description:
+        'Конец декабря: зал украшен, по вечерам играет живая музыка, в меню появляется глинтвейн на еловых шишках. Столы на праздники бронируйте заранее — свободных почти не остаётся.',
+      priceNote: 'вход свободный',
+      isPublished: true,
+      sortOrder: 100,
+    },
+  })
+
+  console.log('Бизнес-ланч…')
+  const lunches: {
+    title: string
+    description: string
+    price: number
+    priceNote?: string
+    sortOrder: number
+  }[] = [
+    {
+      title: 'Ланч: суп, горячее и напиток',
+      description:
+        'Суп дня, горячее с гарниром и морс. Состав меняется каждый день — спрашивайте у официанта или смотрите на доске у входа.',
+      price: rub(490),
+      sortOrder: 0,
+    },
+    {
+      title: 'Большой ланч: салат, суп, горячее и десерт',
+      description:
+        'Четыре перемены для тех, кто обедает не спеша. Действует по будням, кроме праздников.',
+      price: rub(690),
+      priceNote: 'по будням до 16:00',
+      sortOrder: 10,
+    },
+  ]
+
+  for (const lunch of lunches) {
+    await prisma.businessLunch.create({ data: lunch })
+  }
 
   console.log('Столы и QR…')
   for (let number = 1; number <= 12; number += 1) {

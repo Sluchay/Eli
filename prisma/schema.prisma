@@ -52,6 +52,9 @@ model SiteSettings {
   currency        String   @default("₽")
   bookingEnabled  Boolean  @default(true)
   deliveryEnabled Boolean  @default(false)
+  /// Надпись про бизнес-ланч: «пн–пт, 12:00–16:00»
+  lunchNote       String?
+  lunchEnabled    Boolean  @default(true)
   updatedAt       DateTime @updatedAt
 }
 
@@ -154,13 +157,16 @@ model ScanEvent {
   @@index([createdAt])
 }
 
-/// Мероприятие (афиша): вечера живой музыки, дегустации, праздники.
+/// Публикация афиши. Поддерживает два формата:
+///  - «пост»: фото + описание, без даты и заголовка — чтобы анонс можно было
+///    быстро перенести из соцсетей копированием;
+///  - «событие»: с датой и временем, тогда оно попадает в расписание.
 model Event {
   id           String    @id @default(cuid())
-  slug         String    @unique
-  title        String
+  slug         String?   @unique
+  title        String?
   description  String?
-  startsAt     DateTime
+  startsAt     DateTime?
   endsAt       DateTime?
   price        Int?
   priceNote    String?
@@ -168,6 +174,7 @@ model Event {
   bookingPhone String?
   isPublished  Boolean   @default(true)
   isFeatured   Boolean   @default(false)
+  sortOrder    Int       @default(0)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
@@ -202,4 +209,23 @@ model AuditLog {
   createdAt DateTime @default(now())
 
   @@index([createdAt])
+}
+
+/// Бизнес-ланч: короткая публикация «фото + описание», которую удобно
+/// собирать копированием из соцсетей. Часы подачи — в SiteSettings.lunchNote.
+model BusinessLunch {
+  id          String    @id @default(cuid())
+  title       String    @default("Бизнес-ланч")
+  description String?
+  price       Int?
+  priceNote   String?
+  imagePath   String?
+  validFrom   DateTime?
+  validTo     DateTime?
+  isPublished Boolean   @default(true)
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([sortOrder])
 }

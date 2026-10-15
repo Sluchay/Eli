@@ -1,4 +1,3 @@
-import Image from 'next/image'
 import type { ReactElement } from 'react'
 import {
   BowlIcon,
@@ -85,12 +84,15 @@ export function MenuItemCard({ item, iconKey }: Props) {
     >
       <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-brand border border-kraft-300/80 bg-kraft-200/50 sm:h-24 sm:w-24">
         {item.image && item.image.path.startsWith('/') ? (
-          <Image
+          // Фотография уже сжата и переведена в WebP при загрузке через админку,
+          // поэтому здесь обычный img: оптимизировать повторно нечего.
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
             src={item.image.path}
             alt={item.image.alt ?? item.name}
-            fill
-            sizes="96px"
-            className="object-cover"
+            loading="lazy"
+            decoding="async"
+            className="absolute inset-0 h-full w-full object-cover"
           />
         ) : (
           // Блюдо без фото: та же рамка, тот же размер, гравюрная иконка раздела.

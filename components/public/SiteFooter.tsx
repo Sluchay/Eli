@@ -77,6 +77,11 @@ export function SiteFooter() {
               </Link>
             </li>
             <li>
+              <Link href="/lunch" className="transition-colors hover:text-kraft-100">
+                Бизнес-ланч
+              </Link>
+            </li>
+            <li>
               <Link href="/booking" className="transition-colors hover:text-kraft-100">
                 Забронировать стол
               </Link>
