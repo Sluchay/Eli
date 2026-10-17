@@ -27,6 +27,8 @@ export type MenuItemView = {
   badges: string[]
   isStopList: boolean
   image: { path: string; alt: string | null; width: number; height: number } | null
+  /** Варианты одного блюда: размеры пиццы, порция/половина. Пусто — если их нет. */
+  variants: MenuVariant[]
 }
 
 export type MenuSectionView = {
@@ -41,6 +43,89 @@ export type MenuSectionView = {
 }
 
 export type BadgeTone = 'hit' | 'new' | 'diet' | 'spicy' | 'local'
+
+/**
+ * Вариант блюда: пицца 30 / 40 см, порция / половина, стакан / бутылка.
+ *
+ * Зачем это, а не отдельные блюда: гость выбирает размер в одной карточке,
+ * а не сравнивает «Маргарита, 30 см» и «Маргарита, 40 см» как разные позиции.
+ * Цена и вес у варианта свои — иначе смысла в вариантах нет; описание и
+ * подпись к цене — необязательные уточнения (например, «35 см, тесто тонкое»).
+ */
+export type MenuVariant = {
+  /** Как вариант называется в интерфейсе: «30 см», «половина», «0,5 л» */
+  label: string
+  /** Цена в копейках. null — «цена по запросу» */
+  price: number | null
+  /** Вес или объём именно этого варианта: «480 г», «0,5 л» */
+  weight: string | null
+  /** Уточнение к цене варианта */
+  priceNote: string | null
+  /** Своё описание, если у размера другой состав или подача */
+  description: string | null
+  /** Какой вариант выбран по умолчанию (первый из выбранных) */
+  isDefault?: boolean
+}
+
+/**
+ * Читает варианты из JSON-строки и выбрасывает всё непонятное.
+ *
+ * Данные приходят из админки, то есть от человека: там может оказаться
+ * пустая строка, ноль, строка вместо числа. Молча падать из-за этого нельзя —
+ * лучше показать блюдо без вариантов, чем сломать всю карточку.
+ */
+export function parseVariants(raw: string | null | undefined): MenuVariant[] {
+  if (!raw) return []
+
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(raw)
+  } catch {
+    return []
+  }
+
+  if (!Array.isArray(parsed)) return []
+
+  const variants: MenuVariant[] = []
+
+  for (const entry of parsed) {
+    if (!entry || typeof entry !== 'object') continue
+
+    const record = entry as Record<string, unknown>
+    const label = typeof record.label === 'string' ? record.label.trim() : ''
+    if (!label) continue
+
+    const priceValue = typeof record.price === 'number' ? record.price : Number(record.price)
+    const price =
+      Number.isFinite(priceValue) && priceValue > 0 ? Math.round(priceValue) : null
+
+    variants.push({
+      label,
+      price,
+      weight: typeof record.weight === 'string' && record.weight.trim() ? record.weight.trim() : null,
+      priceNote:
+        typeof record.priceNote === 'string' && record.priceNote.trim()
+          ? record.priceNote.trim()
+          : null,
+      description:
+        typeof record.description === 'string' && record.description.trim()
+          ? record.description.trim()
+          : null,
+      isDefault: record.isDefault === true,
+    })
+  }
+
+  return variants
+}
+
+/**
+ * Вариант, который показывается сразу. Первый помеченный «по умолчанию»,
+ * иначе первый в списке.
+ */
+export function defaultVariant(variants: MenuVariant[]): MenuVariant | null {
+  if (variants.length === 0) return null
+  return variants.find((variant) => variant.isDefault) ?? variants[0] ?? null
+}
 
 export const BADGES: Record<string, { label: string; tone: BadgeTone }> = {
   hit: { label: 'Хит', tone: 'hit' },
@@ -117,6 +202,7 @@ function toItemView(item: MenuItem & { images: MenuItemImage[] }): MenuItemView 
     image: primary
       ? { path: primary.path, alt: primary.alt, width: primary.width, height: primary.height }
       : null,
+    variants: parseVariants(item.variants),
   }
 }
 

@@ -3,6 +3,7 @@ import { EventForm, type EventFormData } from '@/components/admin/EventForm'
 import { cardClass, Notice, toDateTimeInput } from '@/components/admin/ui'
 import { prisma } from '@/lib/db'
 import { formatEventDateTime } from '@/lib/format'
+import { imageFrame } from '@/lib/image-frame'
 import { kopecksToInput } from '@/lib/money'
 
 export const dynamic = 'force-dynamic'
@@ -32,7 +33,9 @@ export default async function AdminEventsPage({
       price: kopecksToInput(event.price),
       priceNote: event.priceNote,
       bookingPhone: event.bookingPhone,
-      image: event.imagePath ? { path: event.imagePath, width: 0, height: 0 } : null,
+      image: event.imagePath
+        ? { path: event.imagePath, width: event.imageWidth ?? 0, height: event.imageHeight ?? 0 }
+        : null,
       isPublished: event.isPublished,
       sortOrder: String(event.sortOrder),
     }
@@ -111,17 +114,23 @@ export default async function AdminEventsPage({
         </h2>
 
         <div className="mt-5 space-y-6">
-          {posts.map((post) => (
-            <div key={post.id} className={cardClass}>
-              <div className="flex flex-wrap items-start gap-4">
-                {post.imagePath && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={post.imagePath}
-                    alt=""
-                    className="h-20 w-20 shrink-0 rounded-brand border border-kraft-300 object-cover"
-                  />
-                )}
+          {posts.map((post) => {
+            const frame = imageFrame(post.imageWidth, post.imageHeight)
+            return (
+              <div key={post.id} className={cardClass}>
+                <div className="flex flex-wrap items-start gap-4">
+                  {post.imagePath && (
+                    // Анонс из соцсетей почти всегда вертикальный, поэтому превью
+                    // показываем в его пропорциях, а не квадратом: так сразу видно,
+                    // что именно уйдёт в ленту и как кадр ляжет на сайте.
+                    <div
+                      className="w-20 shrink-0 overflow-hidden rounded-brand border border-kraft-300 bg-kraft-200/60"
+                      style={frame.thumbStyle}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={post.imagePath} alt="" className="h-full w-full object-cover" />
+                    </div>
+                  )}
                 <div className="min-w-0 flex-1">
                   <h3 className="font-heading text-lg text-forest-700">
                     {post.title ?? 'Анонс'}
@@ -156,7 +165,8 @@ export default async function AdminEventsPage({
                 </button>
               </form>
             </div>
-          ))}
+            )
+          })}
 
           {posts.length === 0 && (
             <p className="text-sm text-ink-soft">

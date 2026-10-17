@@ -25,14 +25,22 @@ export function QuickActions() {
     {
       href: SITE.routeUrl,
       title: 'Как добраться',
-      description: SITE.addressShort,
+      // Полный адрес: город, улица, торговый центр и этаж. Гость смотрит эту
+      // карточку, чтобы решить, ехать ли, — «Советская, 157» без города и
+      // этажа отвечает не на тот вопрос.
+      description: (
+        <>
+          <span className="block">{SITE.addressLines[0]}</span>
+          <span className="block">{SITE.addressLines[1]}</span>
+        </>
+      ),
       icon: <PinIcon className="h-6 w-6" />,
       external: true,
     },
   ]
 
   return (
-    <div className="border-b border-kraft-300/70 bg-kraft-200/60">
+    <div className="relative z-10 border-b border-kraft-300/70 bg-kraft-200/60">
       <div className="container-page grid gap-px py-0 sm:grid-cols-3">
         {actions.map((action) => {
           const content = (
@@ -41,7 +49,9 @@ export function QuickActions() {
                 {action.icon}
               </span>
               <span className="mt-4 block font-heading text-xl text-forest-700">{action.title}</span>
-              <span className="mt-1 block text-sm text-ink-soft">{action.description}</span>
+              <span className="mt-1 block text-sm leading-snug text-ink-soft">
+                {action.description}
+              </span>
             </>
           )
 

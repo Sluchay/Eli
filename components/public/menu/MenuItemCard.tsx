@@ -1,4 +1,8 @@
-import type { ReactElement } from 'react'
+'use client'
+
+import { useState, type ReactElement } from 'react'
+import { DishPhoto } from '@/components/public/menu/DishPhoto'
+import { VariantPicker } from '@/components/public/menu/VariantPicker'
 import {
   BowlIcon,
   CakeIcon,
@@ -15,7 +19,8 @@ import {
   WheatIcon,
 } from '@/components/ui/icons'
 import { formatPrice } from '@/lib/format'
-import { ALLERGEN_LABELS, BADGES, type MenuItemView } from '@/lib/menu'
+import { photoFrameStyle } from '@/lib/image-frame'
+import { ALLERGEN_LABELS, BADGES, type MenuItemView, type MenuVariant } from '@/lib/menu'
 
 /**
  * Карточка блюда.
@@ -23,8 +28,12 @@ import { ALLERGEN_LABELS, BADGES, type MenuItemView } from '@/lib/menu'
  * Главное требование к ней: выглядеть цельно при ЛЮБОЙ комбинации заполненных
  * полей. У владельца может быть только название и цена — и это нормально.
  * Поэтому:
- *  - слева всегда квадрат одного размера: фото или гравюрная иконка раздела;
- *  - пустые поля не рендерятся совсем (никаких «Вес: —»);
+ *  - кадр всегда одного формата 4:3 и во всю ширину карточки. Так он читается
+ *    на телефоне: в две колонки это ~145 px, то есть вчетверо больше прежнего
+ *    квадратика 80 px. По нажатию фото открывается целиком в окне;
+ *  - при пустых полях ничего не рендерится (никаких «Вес: —»);
+ *  - у блюда без фото тот же кадр занимает гравюрная иконка раздела — соседство
+ *    «с фото / без фото» не должно читаться как брак;
  *  - название обрезается до двух строк, описание до трёх, полный текст
  *    раскрывается по кнопке «Подробнее» вместе с составом, аллергенами и КБЖУ;
  *  - блюдо из стоп-листа не исчезает, а гасится и получает плашку.
@@ -60,14 +69,38 @@ type Props = {
 
 export function MenuItemCard({ item, iconKey }: Props) {
   const Icon = ICON_BY_SECTION[iconKey] ?? BowlIcon
-  const price = formatPrice(item.price)
 
-  const portion = [item.weight, item.volume].filter(Boolean).join(' · ')
+  /**
+   * Выбранный вариант (размер пиццы). null — вариантов нет, показываем цену
+   * самого блюда. Состояние живёт здесь, а не в VariantPicker, потому что от
+   * него зависит цена внизу карточки: два места не должны спорить о цифре.
+   *
+   * Индекс по умолчанию считается сразу на сервере, поэтому правильная цена
+   * видна уже в первом HTML-ответе, ещё до выполнения JS.
+   */
+  const defaultVariantIndex = item.variants.findIndex((variant) => variant.isDefault)
+  const defaultIndex = defaultVariantIndex >= 0 ? defaultVariantIndex : 0
+  // Вариантов нет — chosen остаётся null, карточка показывает цену блюда
+  const [chosen, setChosen] = useState<MenuVariant | null>(
+    () => item.variants[defaultIndex] ?? null,
+  )
+
+  const hasVariants = item.variants.length > 0
+
+  // Цена, вес и подпись берутся у выбранного варианта, если он есть
+  const price = formatPrice(chosen ? chosen.price : item.price)
+  const activeWeight = chosen ? chosen.weight : null
+  const activePriceNote = chosen ? chosen.priceNote : item.priceNote
+  const description = chosen?.description ?? item.description
+
+  const portion = [activeWeight ?? item.weight, activeWeight ? null : item.volume]
+    .filter(Boolean)
+    .join(' · ')
   const allergenLabels = item.allergens
     .map((code) => ALLERGEN_LABELS[code] ?? code)
     .filter(Boolean)
 
-  const isLongDescription = (item.description?.length ?? 0) > 140
+  const isLongDescription = (description?.length ?? 0) > 140
   const hasDetails = Boolean(
     item.composition || allergenLabels.length > 0 || item.nutrition || isLongDescription,
   )
@@ -76,45 +109,46 @@ export function MenuItemCard({ item, iconKey }: Props) {
     .map((code) => ({ code, ...(BADGES[code] ?? { label: code, tone: 'local' as const }) }))
     .slice(0, 2)
 
+  const photo = item.image && item.image.path.startsWith('/') ? item.image : null
+
   return (
     <article
-      className={`flex h-full gap-4 rounded-brand border border-kraft-300/80 bg-kraft-100/70 p-4 transition-colors ${
+      className={`flex h-full flex-col overflow-hidden rounded-brand border border-kraft-300/80 bg-kraft-100/70 transition-colors ${
         item.isStopList ? 'border-dashed opacity-75' : 'hover:border-kraft-400'
       }`}
     >
-      <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-brand border border-kraft-300/80 bg-kraft-200/50 sm:h-24 sm:w-24">
-        {item.image && item.image.path.startsWith('/') ? (
-          // Фотография уже сжата и переведена в WebP при загрузке через админку,
-          // поэтому здесь обычный img: оптимизировать повторно нечего.
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={item.image.path}
-            alt={item.image.alt ?? item.name}
-            loading="lazy"
-            decoding="async"
-            className="absolute inset-0 h-full w-full object-cover"
+      <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden bg-kraft-200/50">
+        {photo ? (
+          <DishPhoto
+            src={photo.path}
+            alt={photo.alt ?? item.name}
+            name={item.name}
+            price={item.price}
+            priceNote={item.priceNote}
+            ratioStyle={photoFrameStyle(photo.width, photo.height)}
+            label={`Увеличить фотографию блюда «${item.name}»`}
           />
         ) : (
-          // Блюдо без фото: та же рамка, тот же размер, гравюрная иконка раздела.
-          // Соседство «с фото / без фото» не должно читаться как брак.
+          // Блюдо без фото: тот же кадр, тот же размер, гравюрная иконка раздела.
           <span className="flex h-full w-full items-center justify-center text-kraft-400">
-            <Icon className="h-8 w-8 sm:h-9 sm:w-9" />
+            <Icon className="h-10 w-10 sm:h-12 sm:w-12" />
+          </span>
+        )}
+
+        {item.isStopList && (
+          <span className="absolute left-2 top-2 rounded-brand border border-berry/40 bg-kraft-100/95 px-2 py-0.5 text-[0.625rem] font-semibold uppercase tracking-[0.12em] text-berry">
+            Нет в наличии
           </span>
         )}
       </div>
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col p-3 sm:p-4">
         <h3 className="line-clamp-2 font-heading text-[1.0625rem] leading-snug text-forest-700 sm:text-lg">
           {item.name}
         </h3>
 
-        {(visibleBadges.length > 0 || item.isStopList) && (
+        {visibleBadges.length > 0 && (
           <ul className="mt-2 flex flex-wrap items-center gap-1.5">
-            {item.isStopList && (
-              <li className="rounded-brand border border-berry/40 bg-berry/10 px-2 py-0.5 text-[0.625rem] font-semibold uppercase tracking-[0.12em] text-berry">
-                Нет в наличии
-              </li>
-            )}
             {visibleBadges.map((badge) => (
               <li
                 key={badge.code}
@@ -128,13 +162,22 @@ export function MenuItemCard({ item, iconKey }: Props) {
           </ul>
         )}
 
-        {item.description && (
+        {hasVariants && (
+          <VariantPicker
+            variants={item.variants}
+            defaultIndex={defaultIndex}
+            onSelect={(variant) => setChosen(variant)}
+            disabled={item.isStopList}
+          />
+        )}
+
+        {description && (
           <p
             className={`mt-2 text-[0.875rem] leading-relaxed text-ink-soft ${
               isLongDescription ? 'line-clamp-3' : ''
             }`}
           >
-            {item.description}
+            {description}
           </p>
         )}
 
@@ -146,7 +189,7 @@ export function MenuItemCard({ item, iconKey }: Props) {
             </summary>
 
             <div className="mt-3 space-y-2 border-t border-kraft-300/70 pt-3 text-[0.8125rem] leading-relaxed text-ink-soft">
-              {isLongDescription && item.description && <p>{item.description}</p>}
+              {isLongDescription && description && <p>{description}</p>}
 
               {item.composition && (
                 <p>
@@ -192,11 +235,11 @@ export function MenuItemCard({ item, iconKey }: Props) {
               </span>
             ) : (
               <span className="text-[0.8125rem] text-ink-soft">
-                {item.priceNote ?? 'цена по запросу'}
+                {activePriceNote ?? 'цена по запросу'}
               </span>
             )}
-            {price && item.priceNote && (
-              <span className="block text-[0.6875rem] text-ink-soft/80">{item.priceNote}</span>
+            {price && activePriceNote && (
+              <span className="block text-[0.6875rem] text-ink-soft/80">{activePriceNote}</span>
             )}
           </p>
         </div>

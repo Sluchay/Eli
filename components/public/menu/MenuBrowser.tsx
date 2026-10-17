@@ -250,7 +250,9 @@ export function MenuBrowser({ sections }: Props) {
                 )}
               </header>
 
-              <ul className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {/* Две колонки уже на телефоне: в одну колонку карточка с фото
+                  выглядит мелко, а в две кадр ~145 px и блюдо видно. */}
+              <ul className="mt-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
                 {section.items.map((item) => (
                   <li key={item.id} className="h-full">
                     <MenuItemCard item={item} iconKey={section.iconKey} />

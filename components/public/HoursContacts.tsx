@@ -91,9 +91,17 @@ export function HoursContacts() {
             </ButtonLink>
           </div>
 
+          {/* Прежняя приписка про парковку во дворе и вход с торца была
+              демо-текстом и для ресторана на третьем этаже ТЦ прямо неверна.
+              Вместо неё — то, что просил владелец: куда идти за подробностями. */}
           <p className="mt-6 text-sm leading-relaxed text-ink-soft">
-            Парковка во дворе, вход с торца. Если едете большой компанией — позвоните заранее,
-            сдвинем столы.
+            {SITE.contactNote}{' '}
+            <a
+              href={SITE.phoneHref}
+              className="tnum text-ink underline decoration-kraft-400 underline-offset-4 transition-colors hover:text-forest-700"
+            >
+              {SITE.phoneDisplay}
+            </a>
           </p>
         </div>
       </div>

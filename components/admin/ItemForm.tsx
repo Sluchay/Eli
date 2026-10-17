@@ -3,10 +3,11 @@
 import { useState } from 'react'
 import { deleteItemAction, saveItemAction } from '@/app/admin/actions'
 import { ImageField, type ImageValue } from '@/components/admin/ImageField'
+import { VariantsField } from '@/components/admin/VariantsField'
 import { cardClass, inputClass, labelClass } from '@/components/admin/ui'
 import { MenuItemCard } from '@/components/public/menu/MenuItemCard'
 import { buttonClass } from '@/components/ui/Button'
-import { ALLERGEN_LABELS, BADGES, type MenuItemView } from '@/lib/menu'
+import { ALLERGEN_LABELS, BADGES, type MenuItemView, type MenuVariant } from '@/lib/menu'
 import { inputToKopecks } from '@/lib/money'
 
 /**
@@ -40,6 +41,8 @@ export type ItemFormValues = {
   isStopList: boolean
   sortOrder: string
   image: ImageValue | null
+  /** Варианты блюда: размеры пиццы. Пусто — блюдо с одной ценой. */
+  variants: MenuVariant[]
 }
 
 export type SectionOption = {
@@ -93,6 +96,7 @@ export function ItemForm({ values, sections }: { values: ItemFormValues; section
       : null,
     badges: state.badges,
     isStopList: state.isStopList,
+    variants: state.variants,
     image: state.image ? { ...state.image, alt: state.name } : null,
   }
 
@@ -150,7 +154,19 @@ export function ItemForm({ values, sections }: { values: ItemFormValues; section
                 onChange={(event) => setField('price', event.target.value)}
                 className={inputClass}
               />
+              {state.variants.length > 0 && (
+                <span className="mt-1 block text-[0.6875rem] text-ink-soft">
+                  Не используется: у блюда есть размеры, цена берётся из выбранного.
+                </span>
+              )}
             </label>
+
+            <div className="sm:col-span-2">
+              <VariantsField
+                value={state.variants}
+                hint="Размеры пиццы или порции. Гость выбирает размер в одной карточке, цена и вес меняются. Если размеров нет — оставьте пустым."
+              />
+            </div>
 
             <label className="block sm:col-span-2">
               <span className={labelClass}>Описание</span>

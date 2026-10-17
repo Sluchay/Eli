@@ -8,18 +8,21 @@ const siteUrl = process.env.SITE_URL ?? 'http://localhost:3000'
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: `${SITE.name} — ресторан русской кухни в хвойном лесу`,
+    // Город в заголовке — то, по чему локальный ресторан ищут в первую очередь
+    default: `${SITE.name} — ресторан русской кухни · ${SITE.city}`,
     template: `%s · ${SITE.name}`,
   },
   description: SITE.descriptionShort,
   applicationName: SITE.name,
-  keywords: ['ресторан', 'русская кухня', 'хвойный лес', 'живая музыка', SITE.city],
+  keywords: ['ресторан', 'русская кухня', 'хвойный лес', 'живая музыка', SITE.city].filter(
+    (keyword) => keyword.length > 0,
+  ),
   openGraph: {
     type: 'website',
     locale: 'ru_RU',
     url: siteUrl,
     siteName: `Ресторан ${SITE.name}`,
-    title: `${SITE.name} — ресторан русской кухни в хвойном лесу`,
+    title: `${SITE.name} — ресторан русской кухни · ${SITE.city}`,
     description: SITE.descriptionShort,
   },
   robots: { index: true, follow: true },

@@ -1,6 +1,6 @@
 import Link from 'next/link'
-import { Logo } from '@/components/brand/Logo'
-import { Spruce } from '@/components/brand/Ornament'
+import { LogoLockup } from '@/components/brand/Logo'
+import { LogoForest, Spruce } from '@/components/brand/Ornament'
 import { getOpeningHours, formatRange, getOpenStatus } from '@/lib/hours'
 import { SITE } from '@/lib/site'
 
@@ -10,17 +10,15 @@ export function SiteFooter() {
 
   return (
     <footer className="mt-auto bg-forest-900 text-kraft-200">
-      {/* Кромка леса — тот же мотив, что на афише */}
-      <div className="h-6 w-full overflow-hidden text-forest-700" aria-hidden="true">
-        <svg viewBox="0 0 224 48" preserveAspectRatio="none" fill="currentColor" className="h-6 w-full">
-          <path d="M0 48h224V30l-14 8-10-14-12 12-16-16-12 14-14-10-11 12-13-15-13 13-12-9-14 15-11-12-12 10-14-8-12 14-14-16v22Z" />
-        </svg>
-      </div>
+      {/* Кромка леса — ели с логотипа, выгравированные по верхней кромке подвала.
+          Цвет гравировки равен фону секции выше: линии не рисуются поверх
+          дерева, а вырезают его, как в фирменном знаке. */}
+      <LogoForest className="h-10 w-full text-forest-700 sm:h-12" />
 
       <div className="container-page grid gap-10 py-12 sm:grid-cols-2 lg:grid-cols-4 lg:py-16">
         <div>
-          <Logo tone="light" />
-          <p className="mt-5 max-w-xs text-sm leading-relaxed text-kraft-300">{SITE.tagline}</p>
+          <LogoLockup />
+          <p className="mt-6 max-w-xs text-sm leading-relaxed text-kraft-300">{SITE.tagline}</p>
           <p className="mt-4 text-xs uppercase tracking-[0.18em] text-moss-300">
             {status.isOpen ? 'Сейчас открыто' : 'Сейчас закрыто'}
           </p>

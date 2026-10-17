@@ -133,6 +133,34 @@ export function CloseIcon({ className }: IconProps) {
   )
 }
 
+/** «Развернуть»: две стрелки по диагонали — подсказка, что фото увеличится */
+export function ExpandIcon({ className }: IconProps) {
+  return (
+    <Base className={className}>
+      <path d="M12.2 3.8h4v4" />
+      <path d="M16.2 3.8 11.5 8.5" />
+      <path d="M7.8 16.2h-4v-4" />
+      <path d="M3.8 16.2l4.7-4.7" />
+    </Base>
+  )
+}
+
+export function ChevronLeftIcon({ className }: IconProps) {
+  return (
+    <Base className={className}>
+      <path d="M12 5.5 7.5 10l4.5 4.5" />
+    </Base>
+  )
+}
+
+export function ChevronRightIcon({ className }: IconProps) {
+  return (
+    <Base className={className}>
+      <path d="M8 5.5 12.5 10 8 14.5" />
+    </Base>
+  )
+}
+
 export function LeafIcon({ className }: IconProps) {
   return (
     <Base className={className}>

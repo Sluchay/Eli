@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { Logo } from '@/components/brand/Logo'
+import { MobileNav } from '@/components/public/MobileNav'
 import { buttonClass } from '@/components/ui/Button'
 import { getOpenStatus } from '@/lib/hours'
 import { SITE } from '@/lib/site'
@@ -32,7 +33,7 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-kraft-300/80 bg-kraft-100/95 backdrop-blur-sm">
-      <div className="container-page flex items-center justify-between gap-4 py-2.5">
+      <div className="relative container-page flex items-center justify-between gap-4 py-2.5">
         <Link href="/" aria-label={`${SITE.name} — на главную`} className="shrink-0">
           <Logo />
         </Link>
@@ -71,9 +72,16 @@ export function SiteHeader() {
             <span className="sr-only sm:hidden">Позвонить: {SITE.phoneDisplay}</span>
           </a>
 
-          <Link href="/menu" className={buttonClass('primary', 'md')}>
+          {/* Кнопка «Меню» на телефоне не нужна: там вместо неё меню навигации,
+              и внутри него есть пункт «Меню».
+              Скрываем через max-md:hidden, а не через hidden: в стилях кнопки
+              уже есть inline-flex, и простой hidden с ним конфликтует —
+              в собранном CSS побеждает inline-flex, и кнопка остаётся. */}
+          <Link href="/menu" className={`max-md:hidden ${buttonClass('primary', 'md')}`}>
             Меню
           </Link>
+
+          <MobileNav />
         </div>
       </div>
     </header>

@@ -35,6 +35,9 @@ export function EventForm({ event }: { event?: EventFormData }) {
     <form action={saveEventAction} className="grid gap-4 sm:grid-cols-2">
       {event && <input type="hidden" name="id" value={event.id} />}
       <input type="hidden" name="imagePath" value={image?.path ?? ''} />
+      {/* Размеры фото: страница афиши берёт из них пропорции кадра */}
+      <input type="hidden" name="imageWidth" value={image?.width ?? ''} />
+      <input type="hidden" name="imageHeight" value={image?.height ?? ''} />
 
       <label className="block sm:col-span-2">
         <span className={labelClass}>Подпись</span>
@@ -66,7 +69,7 @@ export function EventForm({ event }: { event?: EventFormData }) {
         <ImageField
           value={image}
           onChange={setImage}
-          hint="Можно оставить только фото и подпись — получится пост, как в соцсетях."
+          hint="Загружайте тот же файл, что выложили в соцсети: вертикальный кадр на сайте покажется целиком, отдельная версия не нужна."
         />
       </div>
 

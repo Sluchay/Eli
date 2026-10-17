@@ -33,3 +33,13 @@ desktop.ini
 !.vscode/settings.json
 !.vscode/extensions.json
 .idea/
+
+# Скриншоты для проверки вёрстки
+.shots/
+
+# Бинарник туннеля Cloudflare (53 МБ, не нужен в репозитории)
+tools/cloudflared.exe
+tools/*.part
+
+# Загруженные фото блюд
+data/uploads/

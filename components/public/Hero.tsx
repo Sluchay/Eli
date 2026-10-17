@@ -1,4 +1,4 @@
-import { SpruceRow } from '@/components/brand/Ornament'
+import { ForestEdge } from '@/components/brand/Ornament'
 import { ButtonLink } from '@/components/ui/Button'
 import { ClockIcon, PhoneIcon, PinIcon } from '@/components/ui/icons'
 import { getOpenStatus } from '@/lib/hours'
@@ -15,11 +15,24 @@ export function Hero() {
   const status = getOpenStatus()
 
   return (
-    <section className="grain-dark relative isolate overflow-hidden bg-forest-900 text-kraft-100">
+    <section className="relative isolate overflow-hidden text-kraft-100">
+      {/* ОДИН фон на всю секцию, сверху донизу.
+          Раньше их было три: тёмная плашка героя, такая же плашка под лесом
+          и отдельные заливки у деревьев. На стыке появлялась заметная полоса,
+          а без зерна обрывалась ещё и текстура бумаги — отсюда чувство двух
+          наложенных картинок. Теперь градиент один и непрерывный:
+          глубокий хвойный сверху → хвойный → дымка у самой земли. */}
       <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_35%,rgba(94,122,85,0.28),transparent_65%)]"
+        className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_bottom,#16281f_0%,#16281f_14%,#1a2d22_38%,#22382b_62%,#31483a_82%,#3f5747_100%)]"
         aria-hidden="true"
       />
+      {/* Мягкий свет сверху — тот же, что был, но поверх общего градиента */}
+      <div
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_22%,rgba(94,122,85,0.2),transparent_55%)]"
+        aria-hidden="true"
+      />
+      {/* Зерно бумаги на всю секцию: раньше оно обрывалось на границе героя */}
+      <div className="grain-dark pointer-events-none absolute inset-0" aria-hidden="true" />
 
       <div className="container-page relative flex min-h-[70vh] flex-col items-center justify-center py-16 text-center sm:py-24">
         <p className="eyebrow text-brass-light">Русская кухня · хвойный лес</p>
@@ -29,7 +42,7 @@ export function Hero() {
             ЕЛИ
           </span>
           <span className="sr-only">
-            {SITE.name} — ресторан русской кухни, {SITE.city}
+            {SITE.name} — ресторан русской кухни{SITE.city ? `, ${SITE.city}` : ''}
           </span>
         </h1>
 
@@ -42,7 +55,14 @@ export function Hero() {
         </p>
 
         <div className="mt-10 flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:gap-4">
-          <ButtonLink href="/menu" variant="primary" size="lg" className="bg-kraft-100 text-forest-900 hover:bg-white">
+          {/* Светлая кнопка — вариант light, а не перекраска primary через
+              className: иначе цвета конфликтуют и надпись пропадает. */}
+          <ButtonLink
+            href="/menu"
+            variant="light"
+            size="lg"
+            className="ring-1 ring-kraft-300/60 ring-offset-2 ring-offset-forest-900"
+          >
             Смотреть меню
           </ButtonLink>
           <ButtonLink href="/booking" variant="onDark" size="lg">
@@ -73,8 +93,17 @@ export function Hero() {
         </dl>
       </div>
 
-      <div className="pointer-events-none relative h-20 text-forest-700 sm:h-28" aria-hidden="true">
-        <SpruceRow className="h-full w-full" />
+      {/* Кромка леса.
+          Деревья не «нарисованы поверх» отдельного прямоугольника: у полосы
+          нет своего фона, а лес полупрозрачен. Поэтому он читается как силуэт
+          на общем фоне, а не как наклеенная картинка.
+          Низ полосы заходит под секцию действий (отрицательный отступ ниже),
+          и стволы прячутся за ней, а не обрываются по прямой линии. */}
+      <div
+        className="relative z-0 -mb-[clamp(2.25rem,9vw,4.5rem)] h-[clamp(13rem,32vw,21rem)]"
+        aria-hidden="true"
+      >
+        <ForestEdge className="absolute inset-x-0 bottom-0 h-[clamp(11rem,28vw,17rem)] w-full" />
       </div>
     </section>
   )

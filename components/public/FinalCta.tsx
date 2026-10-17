@@ -14,9 +14,9 @@ export function FinalCta() {
         <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
           <ButtonLink
             href="/menu"
-            variant="primary"
+            variant="light"
             size="lg"
-            className="bg-kraft-100 text-forest-900 hover:bg-white"
+            className="ring-1 ring-kraft-300/60 ring-offset-2 ring-offset-forest-800"
           >
             Смотреть меню
           </ButtonLink>

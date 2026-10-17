@@ -109,6 +109,14 @@ model MenuItem {
   carbs       Float?
   /// JSON-массив меток: ["hit","new","vegan","spicy","glutenfree","local"]
   badges      String      @default("[]")
+  /// JSON-массив вариантов одного блюда (пицца 30/40 см, порция/половина):
+  /// [{"label":"30 см","price":69000,"weight":"480 г","priceNote":null,
+  ///   "description":null,"isDefault":true}]
+  ///
+  /// Зачем варианты, а не отдельные блюда: гость выбирает размер в одной
+  /// карточке, а не сравнивает «Маргарита, 30 см» и «Маргарита, 40 см»
+  /// как разные позиции меню. Цена, вес и подпись у варианта свои.
+  variants    String      @default("[]")
   isVisible   Boolean     @default(true)
   /// Стоп-лист: блюдо показывается приглушённо, но не исчезает
   isStopList  Boolean     @default(false)
@@ -171,6 +179,13 @@ model Event {
   price        Int?
   priceNote    String?
   imagePath    String?
+  /// Размеры фото в пикселях. Нужны, чтобы страница заранее знала пропорции
+  /// вертикального кадра и не «прыгала», пока картинка грузится.
+  imageWidth   Int?
+  imageHeight  Int?
+  /// Как показывать кадр: "natural" — целиком, как в соцсетях;
+  /// "square" — ровный квадрат для тех случаев, когда высота мешает.
+  imageFit     String    @default("natural")
   bookingPhone String?
   isPublished  Boolean   @default(true)
   isFeatured   Boolean   @default(false)

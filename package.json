@@ -16,6 +16,7 @@
     "check:pages": "node scripts/smoke-test.mjs",
     "check:styles": "node scripts/check-styles.mjs",
     "check:admin": "node scripts/check-admin.mjs",
+    "check:price": "node --no-warnings=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/check-price.ts",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:seed": "prisma db seed",

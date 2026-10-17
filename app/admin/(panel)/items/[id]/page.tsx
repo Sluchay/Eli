@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import { ItemForm, type ItemFormValues } from '@/components/admin/ItemForm'
 import { Notice } from '@/components/admin/ui'
 import { prisma } from '@/lib/db'
-import { parseCodeList } from '@/lib/menu'
+import { parseCodeList, parseVariants } from '@/lib/menu'
 import { kopecksToInput } from '@/lib/money'
 
 export const dynamic = 'force-dynamic'
@@ -75,6 +75,7 @@ export default async function AdminItemPage({
         isVisible: item.isVisible,
         isStopList: item.isStopList,
         sortOrder: String(item.sortOrder),
+        variants: parseVariants(item.variants),
         image: primaryImage
           ? { path: primaryImage.path, width: primaryImage.width, height: primaryImage.height }
           : null,
@@ -98,6 +99,7 @@ export default async function AdminItemPage({
         isVisible: true,
         isStopList: false,
         sortOrder: '0',
+        variants: [],
         image: null,
       }
 

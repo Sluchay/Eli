@@ -1,7 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
   <rect width="32" height="32" rx="3" fill="#1f3a2c" />
+  <g transform="translate(16 5.5)" fill="#f4ebd9">
+    <path
+      d="M 0 0 L 1.6 6.41 L 0.99 5.05 L 2.67 10.4 L 1.65 9.04 L 3.27 14.39 L 2.02 13.03 L 4.28 18.38 L 2.65 17.02 L 4.37 21.32 L 2.71 19.96 L 0.47 21 L -0.47 21 L -2.71 19.96 L -4.37 21.32 L -2.65 17.02 L -4.28 18.38 L -2.02 13.03 L -3.27 14.39 L -1.65 9.04 L -2.67 10.4 L -0.99 5.05 L -1.6 6.41 Z"
+    />
+  </g>
   <path
-    fill="#f4ebd9"
-    d="M16 5.5 20.4 12h-2.7l3.6 5.9h-3l4.1 6.7h-5.3v3.4h-2.2v-3.4H9.6l4.1-6.7h-3L14.3 12h-2.7L16 5.5Z"
+    d="M6.5 27.2 Q16 28.6 25.5 27.2"
+    fill="none"
+    stroke="#f4ebd9"
+    stroke-width="1.2"
+    stroke-linecap="round"
   />
 </svg>

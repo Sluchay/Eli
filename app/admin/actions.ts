@@ -45,6 +45,77 @@ function jsonList(form: FormData, key: string): string {
   return JSON.stringify(values)
 }
 
+/**
+ * Варианты блюда (размеры пиццы) приходят JSON-строкой из скрытого поля.
+ *
+ * Форма собирает их в браузере, поэтому на сервер может прийти что угодно:
+ * пустая строка, битый JSON, цены строкой. Здесь всё нормализуется к одному
+ * виду, а мусор отбрасывается — иначе одна кривая запись сломает карточку.
+ */
+function jsonVariants(form: FormData, key: string): string {
+  const raw = text(form, key)
+  if (raw === null) return '[]'
+
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(raw)
+  } catch {
+    return '[]'
+  }
+
+  if (!Array.isArray(parsed)) return '[]'
+
+  const cleaned: {
+    label: string
+    price: number | null
+    weight: string | null
+    priceNote: string | null
+    description: string | null
+    isDefault: boolean
+  }[] = []
+
+  for (const entry of parsed) {
+    if (!entry || typeof entry !== 'object') continue
+    const record = entry as Record<string, unknown>
+
+    const label = typeof record.label === 'string' ? record.label.trim() : ''
+    if (!label) continue
+
+    // Цена варианта приходит в рублях, в базе — в копейках
+    const priceRub =
+      typeof record.price === 'number'
+        ? record.price
+        : Number.parseFloat(String(record.price ?? '').replace(',', '.'))
+
+    const price = Number.isFinite(priceRub) && priceRub > 0 ? Math.round(priceRub * 100) : null
+
+    const weight = typeof record.weight === 'string' ? record.weight.trim() : ''
+    const priceNote = typeof record.priceNote === 'string' ? record.priceNote.trim() : ''
+    const description = typeof record.description === 'string' ? record.description.trim() : ''
+
+    cleaned.push({
+      label,
+      price,
+      weight: weight || null,
+      priceNote: priceNote || null,
+      description: description || null,
+      isDefault: record.isDefault === true,
+    })
+  }
+
+  // Ровно один вариант может быть выбран по умолчанию
+  const defaultSeen = { done: false }
+  for (const variant of cleaned) {
+    if (variant.isDefault && !defaultSeen.done) {
+      defaultSeen.done = true
+    } else {
+      variant.isDefault = false
+    }
+  }
+
+  return JSON.stringify(cleaned)
+}
+
 /** Значение поля datetime-local: «2026-10-17T20:00». */
 function dateTime(form: FormData, key: string): Date | null {
   const raw = text(form, key)
@@ -130,6 +201,7 @@ export async function saveItemAction(formData: FormData): Promise<void> {
     fat: decimal(formData, 'fat'),
     carbs: decimal(formData, 'carbs'),
     badges: jsonList(formData, 'badges'),
+    variants: jsonVariants(formData, 'variants'),
     isVisible: flag(formData, 'isVisible'),
     isStopList: flag(formData, 'isStopList'),
     sortOrder: number(formData, 'sortOrder') ?? 0,
@@ -310,6 +382,10 @@ export async function saveEventAction(formData: FormData): Promise<void> {
     price: inputToKopecks(text(formData, 'price')),
     priceNote: text(formData, 'priceNote'),
     imagePath: text(formData, 'imagePath'),
+    // Размеры нужны странице афиши, чтобы заранее занять место под кадр:
+    // без них на телефоне вёрстка «прыгает», пока грузится вертикальное фото.
+    imageWidth: number(formData, 'imageWidth'),
+    imageHeight: number(formData, 'imageHeight'),
     bookingPhone: text(formData, 'bookingPhone'),
     isPublished: flag(formData, 'isPublished'),
     sortOrder: number(formData, 'sortOrder') ?? 0,
