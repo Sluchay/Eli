@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Типы, линтер, сборка и смоук-проверки
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    # Секреты здесь не нужны: база — временный SQLite-файл, который живёт
+    # только на этом прогоне. AUTH_SECRET и пароль администратора — учебные.
+    env:
+      DATABASE_URL: file:../data/ci.db
+      AUTH_SECRET: ci-only-secret-0123456789abcdef0123456789abcdef
+      ADMIN_EMAIL: admin@eli.local
+      ADMIN_INITIAL_PASSWORD: ci-admin-password
+      TZ: Europe/Moscow
+      SITE_URL: http://127.0.0.1:3000
+      UPLOAD_DIR: ./data/uploads
+      STORAGE_DRIVER: local
+      NEXT_TELEMETRY_DISABLED: '1'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Установить зависимости
+        run: pnpm install --frozen-lockfile
+
+      - name: Подготовить папку для SQLite
+        run: mkdir -p data
+
+      - name: Сгенерировать Prisma Client
+        run: pnpm db:generate
+
+      - name: Применить миграции
+        run: pnpm db:deploy
+
+      - name: Наполнить демо-данными
+        run: pnpm db:seed
+
+      - name: Проверить типы
+        run: pnpm typecheck
+
+      - name: Проверить линтером
+        run: pnpm lint
+
+      - name: Собрать
+        run: pnpm build
+
+      - name: Проверить страницы на запущенном сервере
+        run: |
+          pnpm start &
+          SERVER_PID=$!
+          for _ in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:3000/ >/dev/null; then break; fi
+            sleep 1
+          done
+          pnpm check:pages
+          pnpm check:styles
+          pnpm check:admin
+          kill "$SERVER_PID"

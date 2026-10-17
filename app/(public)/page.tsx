@@ -12,6 +12,10 @@ import { QuickActions } from '@/components/public/QuickActions'
  */
 export const dynamic = 'force-dynamic'
 
+export const metadata = {
+  alternates: { canonical: '/' },
+}
+
 export default function HomePage() {
   return (
     <>

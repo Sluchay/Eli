@@ -10,9 +10,46 @@
  * разделы. Так проверяется вся цепочка, а не только отрисовка страниц.
  */
 
+import { existsSync, readFileSync } from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+/**
+ * Прочитать .env без внешних зависимостей: проверка должна работать и там,
+ * где pnpm запускает скрипт напрямую, и в CI, где .env нет, а переменные
+ * окружения уже заданы. Уже существующие переменные не перезаписываем.
+ */
+function loadEnvFile() {
+  const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
+  const envPath = path.join(root, '.env')
+  if (!existsSync(envPath)) return
+
+  for (const line of readFileSync(envPath, 'utf8').split(/\r?\n/)) {
+    const match = /^([A-Z0-9_]+)=(.*)$/.exec(line.trim())
+    if (!match) continue
+
+    const [, key, rawValue] = match
+    if (process.env[key] !== undefined) continue
+
+    const value = rawValue.replace(/^"(.*)"$/, '$1').replace(/^'(.*)'$/, '$1')
+    process.env[key] = value
+  }
+}
+
+loadEnvFile()
+
 const base = (process.argv[2] ?? 'http://127.0.0.1:3000').replace(/\/$/, '')
 const email = process.env.ADMIN_EMAIL ?? 'admin@eli.local'
-const password = process.env.ADMIN_INITIAL_PASSWORD ?? 'eli-admin-2024'
+const password = process.env.ADMIN_INITIAL_PASSWORD
+
+if (!password) {
+  console.error(
+    'Не задан ADMIN_INITIAL_PASSWORD. Проверка входит в админку тем паролем,\n' +
+      'который был в .env при создании базы. Скопируйте .env.example в .env\n' +
+      'или задайте переменную вручную.',
+  )
+  process.exit(1)
+}
 
 let failures = 0
 

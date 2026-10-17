@@ -9,7 +9,6 @@ import {
   ChevronDownIcon,
   CupIcon,
   FishIcon,
-  FlameIcon,
   GlassIcon,
   JarIcon,
   LeafIcon,

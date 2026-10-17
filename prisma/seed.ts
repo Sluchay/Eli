@@ -18,28 +18,52 @@
  * выглядеть так же аккуратно, как остальные карточки.
  */
 
+import { randomBytes } from 'node:crypto'
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import path from 'node:path'
 import { PrismaClient } from '@prisma/client'
 import { hashPassword } from '../lib/password'
 
 const prisma = new PrismaClient()
 
+/**
+ * Записать сгенерированный пароль в .env, если строка там есть и пуста.
+ *
+ * Зачем: пароль печатается один раз, а окно консоли легко закрыть. .env лежит
+ * в .gitignore, так что это безопасное место для локального пароля. Если
+ * файла или строки нет — просто не трогаем ничего.
+ */
+function persistGeneratedPassword(password: string): boolean {
+  const envPath = path.resolve(process.cwd(), '.env')
+  if (!existsSync(envPath)) return false
+
+  const text = readFileSync(envPath, 'utf8')
+  const line = /^ADMIN_INITIAL_PASSWORD=.*$/m
+  if (!line.test(text)) return false
+
+  const next = text.replace(line, `ADMIN_INITIAL_PASSWORD="${password}"`)
+  if (next === text) return false
+
+  writeFileSync(envPath, next, 'utf8')
+  return true
+}
+
 /** Цены в сиде пишем в рублях — так меню читается человеком. */
 const rub = (value: number) => Math.round(value * 100)
 
-const ALLERGENS = {
-  gluten: 'Глютен',
-  milk: 'Молоко',
-  egg: 'Яйцо',
-  fish: 'Рыба',
-  crustacean: 'Ракообразные',
-  mollusc: 'Моллюски',
-  nuts: 'Орехи',
-  soy: 'Соя',
-  celery: 'Сельдерей',
-  mustard: 'Горчица',
-  sesame: 'Кунжут',
-  sulphites: 'Сульфиты',
-} as const
+type Allergen =
+  | 'gluten'
+  | 'milk'
+  | 'egg'
+  | 'fish'
+  | 'crustacean'
+  | 'mollusc'
+  | 'nuts'
+  | 'soy'
+  | 'celery'
+  | 'mustard'
+  | 'sesame'
+  | 'sulphites'
 
 type SeedItem = {
   name: string
@@ -49,7 +73,7 @@ type SeedItem = {
   weight?: string
   volume?: string
   composition?: string
-  allergens?: (keyof typeof ALLERGENS)[]
+  allergens?: Allergen[]
   nutrition?: { kcal: number; protein: number; fat: number; carbs: number }
   badges?: string[]
   isStopList?: boolean
@@ -585,7 +609,13 @@ async function main() {
 
   console.log('Администратор…')
   const email = process.env.ADMIN_EMAIL ?? 'admin@eli.local'
-  const password = process.env.ADMIN_INITIAL_PASSWORD ?? 'eli-admin-2024'
+  const configuredPassword = process.env.ADMIN_INITIAL_PASSWORD?.trim()
+  // Пароля по умолчанию нет намеренно: репозиторий публичный, а «поменяю после
+  // первого входа» — обещание человека, а не защита. Если пароль не задан в
+  // .env, генерируем случайный и печатаем один раз.
+  const generatedPassword = configuredPassword || randomBytes(12).toString('base64url')
+  const existingAdmin = await prisma.user.findUnique({ where: { email } })
+
   await prisma.user.upsert({
     where: { email },
     update: {},
@@ -593,13 +623,29 @@ async function main() {
       email,
       name: 'Администратор',
       role: 'ADMIN',
-      passwordHash: hashPassword(password),
+      passwordHash: hashPassword(generatedPassword),
     },
   })
 
   const totals = await prisma.menuItem.count()
   console.log(`\nГотово. Разделов: ${MENU.length}, блюд: ${totals}.`)
-  console.log(`Вход в админку: ${email} / ${password} (сменить после первого входа)`)
+
+  if (existingAdmin) {
+    console.log(`Администратор ${email} уже существует — пароль не менялся.`)
+  } else if (configuredPassword) {
+    console.log(`Вход в админку: ${email} / пароль из ADMIN_INITIAL_PASSWORD.`)
+  } else {
+    const saved = persistGeneratedPassword(generatedPassword)
+    console.log('='.repeat(64))
+    console.log(`Пароль администратора: ${generatedPassword}`)
+    console.log(
+      saved
+        ? 'Пароль записан в .env (ADMIN_INITIAL_PASSWORD).'
+        : 'Сохраните его — второй раз сид его не покажет.',
+    )
+    console.log(`Логин: ${email}`)
+    console.log('='.repeat(64))
+  }
 }
 
 main()

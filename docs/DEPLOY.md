@@ -309,6 +309,7 @@ eli-update.sh
 | Нет сертификата, HTTPS не работает | `journalctl -u caddy -n 50`, порты 80/443, правильность имени в Caddyfile |
 | Порт 3000 занят | `ss -ltnp \| grep 3000` — поменять порт в службе и Caddyfile |
 | После `git pull` сайт старый | не выполнен `pnpm build` и `systemctl restart eli` |
+| Сборка падает на шрифтах (`next/font`) | сервер не видит `fonts.googleapis.com`: проверьте `curl -I https://fonts.googleapis.com`; при блокировке перейдём на локальные файлы шрифтов |
 | Забыл пароль админки | сказать мне — пришлю скрипт сброса |
 
 ---

@@ -116,6 +116,37 @@ if (-not (Test-Path (Join-Path $root 'node_modules\next\package.json'))) {
   }
 }
 
+# ── 3.5. Настройки и база данных ─────────────────────────────────────────────
+# На свежей копии нет ни .env, ни базы. Создаём оба, иначе сайт откроется
+# с ошибкой вместо страниц.
+$envFile = Join-Path $root '.env'
+if (-not (Test-Path $envFile) -and (Test-Path (Join-Path $root '.env.example'))) {
+  Copy-Item (Join-Path $root '.env.example') $envFile
+  Write-Host ''
+  Write-Host '  Создал .env из .env.example.' -ForegroundColor DarkGray
+}
+
+New-Item -ItemType Directory -Path (Join-Path $root 'data\uploads') -Force | Out-Null
+
+$dbFile = Join-Path $root 'data\eli.db'
+if (-not (Test-Path $dbFile)) {
+  Write-Host ''
+  Write-Host '  Первый запуск: создаю базу и демо-меню.' -ForegroundColor Yellow
+  Write-Host '  Пароль администратора будет напечатан ниже — сохраните его.' -ForegroundColor Yellow
+
+  Invoke-Pnpm @('db:generate')
+  if ($LASTEXITCODE -eq 0) { Invoke-Pnpm @('db:deploy') }
+  if ($LASTEXITCODE -eq 0) { Invoke-Pnpm @('db:seed') }
+
+  if ($LASTEXITCODE -ne 0) {
+    Write-Host ''
+    Write-Host '  Не удалось создать базу. Смотрите сообщение выше.' -ForegroundColor Red
+    Write-Host ''
+    Read-Host '  Нажмите Enter, чтобы закрыть окно'
+    exit 1
+  }
+}
+
 # ── 4. Браузер откроется сам, как только сервер ответит ──────────────────────
 $opener = $null
 if (-not $NoBrowser) {

@@ -73,7 +73,7 @@ function readToken(token: string | undefined): string | null {
 }
 
 /** Кука помечается secure только если сайт реально работает по HTTPS. */
-function useSecureCookie(): boolean {
+function isSecureCookie(): boolean {
   return (process.env.SITE_URL ?? '').startsWith('https://')
 }
 
@@ -100,7 +100,7 @@ export async function startSession(userId: string): Promise<void> {
   store.set(COOKIE_NAME, createToken(userId), {
     httpOnly: true,
     sameSite: 'lax',
-    secure: useSecureCookie(),
+    secure: isSecureCookie(),
     path: '/',
     maxAge: MAX_AGE_SECONDS,
   })
